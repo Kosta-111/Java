@@ -1,10 +1,11 @@
 package org.example;
 
+import com.github.javafaker.Faker;
 import org.example.entities.Animal;
 import org.example.entities.Enclosure;
 import org.example.entities.Responsible;
 import org.example.util.HibernateUtil;
-import java.util.Random;
+import java.util.Locale;
 
 public class Main {
     public static void main(String[] args) {
@@ -30,32 +31,33 @@ public class Main {
                 System.out.println("===== Table data already exists! =====");
                 return;
             }
-            var random = new Random();
-            String[] species = {"Cat", "Dog", "Rabbit"};
-            String[] breeds = {"Siamese", "Bulldog", "Mini", "Maxi", "Pushok"};
+            var faker = new Faker(new Locale("en-US"));
 
             for (int i = 0; i < 3; i++) {
                 var responsible = new Responsible();
-                responsible.setFirstName("F" + i);
-                responsible.setLastName("L" + i);
-                responsible.setLevel("Level" + i);
+                responsible.setFirstName(faker.name().firstName());
+                responsible.setLastName(faker.name().lastName());
+                responsible.setPhone(faker.phoneNumber().cellPhone());
                 session.persist(responsible);
 
-                for (int j = 0; j < 2; j++) {
+                var count = faker.number().numberBetween(2, 5);
+                for (int j = 0; j < count; j++) {
                     var enclosure = new Enclosure();
-                    enclosure.setCapacity(j + 2);
-                    enclosure.setFloor(j + i);
-                    enclosure.setNumber(j * 100 + j);
-                    enclosure.setSquare(j + (float)j/10);
+                    enclosure.setCapacity(faker.number().numberBetween(2, 5));
+                    enclosure.setFloor(faker.number().numberBetween(1, 3));
+                    enclosure.setNumber(enclosure.getFloor() * 100 + faker.number().numberBetween(1, 100));
+                    enclosure.setSquare((float)faker.number().numberBetween(20, 100) / 10);
                     enclosure.setResponsible(responsible);
                     session.persist(enclosure);
 
-                    for (int k = 0; k < 2; k++) {
+                    count = faker.number().numberBetween(1, enclosure.getCapacity() + 1);
+                    var isCats = faker.bool().bool();
+                    for (int k = 0; k < count; k++) {
                         var animal = new Animal();
-                        animal.setAge(k + 2);
-                        animal.setName("name" + k);
-                        animal.setSpecie(species[random.nextInt(species.length)]);
-                        animal.setBreed(breeds[random.nextInt(breeds.length)]);
+                        animal.setAge(faker.number().numberBetween(1, 11));
+                        animal.setSpecie(isCats ? "Cat" : "Dog");
+                        animal.setName(isCats ? faker.cat().name() : faker.dog().name());
+                        animal.setBreed(isCats ? faker.cat().breed() : faker.dog().breed());
                         animal.setEnclosure(enclosure);
                         session.persist(animal);
                     }
@@ -77,9 +79,8 @@ public class Main {
             System.out.println("\nAnimals:");
             for (var animal : animals) {
                 System.out.println("Animal - " + animal);
-                var enclosure = animal.getEnclosure();
-                System.out.println("Animal Enclosure - " + enclosure);
-                System.out.println("Animal Responsible - " + enclosure.getResponsible());
+                System.out.println("Animal Enclosure - " + animal.getEnclosure());
+                System.out.println("Animal Responsible - " + animal.getEnclosure().getResponsible());
                 System.out.println("===========================================");
             }
         } catch (Exception e) {

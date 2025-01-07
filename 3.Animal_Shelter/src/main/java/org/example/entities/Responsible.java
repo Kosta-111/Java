@@ -21,13 +21,13 @@ public class Responsible {
     private String lastName;
 
     @Column(length = 50, nullable = false)
-    private String level;
+    private String phone;
 
     @OneToMany(mappedBy = "responsible")
     private List<Enclosure> enclosures;
 
     @Override
     public String toString() {
-        return "Id: " + id + ", name: " + firstName + " " + lastName + ", level: " + level;
+        return "Id: " + id + ", name: " + firstName + " " + lastName + ", phone: " + phone;
     }
 }

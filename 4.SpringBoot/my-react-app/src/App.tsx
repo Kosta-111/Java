@@ -1,35 +1,45 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import "./App.css";
+import { APP_ENV } from "./env";
+import { Table } from "flowbite-react";
+import { useGetAllCategoriesQuery } from "./services/categoriesApi";
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const { data: categories, error, isLoading } = useGetAllCategoriesQuery();
+
+  if (isLoading) return <p>Loading...</p>;
+  if (error) return <p>Error occurred while fetching categories!</p>;
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div className="overflow-x-auto">
+        <Table>
+          <Table.Head>
+            <Table.HeadCell>Назва</Table.HeadCell>
+            <Table.HeadCell>Фото</Table.HeadCell>
+            <Table.HeadCell>Опис</Table.HeadCell>
+            <Table.HeadCell>Дії</Table.HeadCell>
+          </Table.Head>
+          <Table.Body className="divide-y">
+            {categories?.map((category) => (
+              <Table.Row key={category.id} className="bg-white dark:border-gray-700 dark:bg-gray-800">
+                <Table.Cell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
+                  {category.name}
+                </Table.Cell>
+                <Table.Cell>
+                  <img src={`${APP_ENV.REMOTE_BASE_URL}/images/${category.image}`}
+                    alt={category.name} className="w-16 h-16 object-cover rounded" />
+                </Table.Cell>
+                <Table.Cell>{category.description}</Table.Cell>
+                <Table.Cell>
+                  <a href="#" className="font-medium text-cyan-600 hover:underline dark:text-cyan-500">
+                    Змінити
+                  </a>
+                </Table.Cell>
+              </Table.Row>
+            ))}
+          </Table.Body>
+        </Table>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
-  )
+  );
 }
-
-export default App

@@ -9,7 +9,7 @@ import java.util.List;
 
 @Service
 public class CategoryService {
-    //Автоматично робиться Dependency Injection
+
     @Autowired
     private ICategoryRepository categoryRepository;
 

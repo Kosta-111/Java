@@ -1,10 +1,10 @@
-package org.example.models;
+package org.example.dto;
 
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
 @Data
-public class Category {
+public class CategoryPostDto {
     private String name;
     private String description;
     private MultipartFile imageFile;

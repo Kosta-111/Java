@@ -1,11 +1,10 @@
 package org.example.service;
 
 import org.example.entites.CategoryEntity;
-import org.example.models.Category;
+import org.example.dto.CategoryPostDto;
 import org.example.repository.ICategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -15,7 +14,6 @@ public class CategoryService {
 
     @Autowired
     private ICategoryRepository categoryRepository;
-
     @Autowired
     private FileService fileService;
 
@@ -27,7 +25,7 @@ public class CategoryService {
         return categoryRepository.findById(id);
     }
 
-    public CategoryEntity createCategory(Category category) {
+    public CategoryEntity createCategory(CategoryPostDto category) {
         var entity = new CategoryEntity();
         entity.setName(category.getName());
         entity.setDescription(category.getDescription());
@@ -38,7 +36,7 @@ public class CategoryService {
         return categoryRepository.save(entity);
     }
 
-    public boolean updateCategory(Integer id, Category category) {
+    public boolean updateCategory(Integer id, CategoryPostDto category) {
         var res = getCategoryById(id);
         if (res.isEmpty()){
             return false;

@@ -1,7 +1,7 @@
 package org.example.controller;
 
 import org.example.entites.CategoryEntity;
-import org.example.models.Category;
+import org.example.dto.CategoryPostDto;
 import org.example.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -30,13 +30,13 @@ public class CategoryController {
     }
 
     @PostMapping(consumes = MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<CategoryEntity> createCategory(@ModelAttribute Category category) {
+    public ResponseEntity<CategoryEntity> createCategory(@ModelAttribute CategoryPostDto category) {
         CategoryEntity createdCategory = categoryService.createCategory(category);
         return new ResponseEntity<>(createdCategory, HttpStatus.CREATED);
     }
 
     @PutMapping(path = "/{id}", consumes = MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Void> updateCategory(@PathVariable Integer id, @ModelAttribute Category category) {
+    public ResponseEntity<Void> updateCategory(@PathVariable Integer id, @ModelAttribute CategoryPostDto category) {
         return categoryService.updateCategory(id, category)
                 ? ResponseEntity.ok().build()
                 : ResponseEntity.notFound().build();

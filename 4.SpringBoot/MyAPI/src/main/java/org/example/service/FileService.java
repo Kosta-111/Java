@@ -3,6 +3,7 @@ package org.example.service;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,10 +17,11 @@ public class FileService {
     private String uploadDir;
 
     public String load(MultipartFile file) {
-        try {
-            // Перевіряємо, чи файл не порожній і чи існує директорія
-            if (file.isEmpty()) return "";
-            Files.createDirectories(Paths.get(uploadDir));
+        // Перевіряємо, чи файл не порожній
+        if (file.isEmpty()) return "";
+
+        try (var inputStream = file.getInputStream()) {
+            Files.createDirectories(Paths.get(uploadDir));  //створить якщо не існує
 
             // Отримуємо ім'я файлу та створюємо шлях для збереження
             var fileName = file.getOriginalFilename();
@@ -30,8 +32,33 @@ public class FileService {
             Path filePath = Paths.get(uploadDir, newFileName);
 
             // Зберігаємо файл на сервер
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-            return filePath.toString();
+            Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
+            return newFileName;
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return "";
+        }
+    }
+
+    public String load(String imageUrl) {
+        // Перевіряємо, чи посилання коректне
+        if (!imageUrl.startsWith("http://") && !imageUrl.startsWith("https://"))
+            return "";
+
+        try (var inputStream = new URL(imageUrl).openStream()) {
+            Files.createDirectories(Paths.get(uploadDir));  //створить якщо не існує
+
+            // Отримуємо ім'я файлу та створюємо шлях для збереження
+            var fileExt = imageUrl.contains(".")
+                    ? imageUrl.substring(imageUrl.lastIndexOf("."))
+                    : "";
+            var newFileName = UUID.randomUUID() + fileExt;
+            Path filePath = Paths.get(uploadDir, newFileName);
+
+            // Зберігаємо файл на сервер
+            Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
+            return newFileName;
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -41,7 +68,7 @@ public class FileService {
 
     public void remove(String fileName) {
         try {
-            Path filePath = Paths.get(fileName);
+            Path filePath = Paths.get(uploadDir, fileName);
             Files.deleteIfExists(filePath);
         } catch (Exception e) {
             System.out.println(e.getMessage());

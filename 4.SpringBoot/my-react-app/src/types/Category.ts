@@ -5,3 +5,13 @@ export interface Category {
     description?: string;
     creationTime: string;
 }
+
+export interface ICategoryCreate {
+    name: string;
+    description: string;
+    imageFile: File | null;
+}
+
+export interface ICategoryEdit extends ICategoryCreate {
+    id: number;
+}

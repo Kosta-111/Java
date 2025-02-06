@@ -74,7 +74,7 @@ const CategoriesPage: React.FC = () => {
                                 </Table.Cell>
                                 <Table.Cell>
                                     <img
-                                        src={APP_ENV.REMOTE_IMAGES_URL + category.image}
+                                        src={APP_ENV.REMOTE_IMAGES_URL + 'medium/' + category.image}
                                         alt={category.name}
                                         className="w-16 h-16 object-cover rounded"
                                     />

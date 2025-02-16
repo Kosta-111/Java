@@ -14,6 +14,7 @@ public class CategoryService {
 
     @Autowired
     private ICategoryRepository categoryRepository;
+
     @Autowired
     private FileService fileService;
 
@@ -31,8 +32,11 @@ public class CategoryService {
         entity.setDescription(category.getDescription());
         entity.setCreationTime(LocalDateTime.now());
 
-        var imagePath = fileService.load(category.getImageFile());
-        entity.setImage(imagePath);
+        var newImageFile = category.getImageFile();
+        if (newImageFile != null && !newImageFile.isEmpty()){
+            var imagePath = fileService.load(newImageFile);
+            entity.setImage(imagePath);
+        }
         return categoryRepository.save(entity);
     }
 
@@ -46,8 +50,8 @@ public class CategoryService {
         entity.setDescription(category.getDescription());
 
         var newImageFile = category.getImageFile();
-        if (!newImageFile.isEmpty()){
-            var newImagePath = fileService.replace(entity.getImage(), category.getImageFile());
+        if (newImageFile != null && !newImageFile.isEmpty()){
+            var newImagePath = fileService.replace(entity.getImage(), newImageFile);
             entity.setImage(newImagePath);
         }
         categoryRepository.save(entity);

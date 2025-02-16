@@ -31,6 +31,10 @@ const EditCategoryPage: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
+            if (!categoryUpdated.imageFile) {                
+                // @ts-ignore
+                delete categoryUpdated.imageFile;
+            }
             // Викликаємо мутацію для редагування категорії
             await updateCategory(categoryUpdated).unwrap();
             navigate('..'); // Перехід до списку категорій

@@ -98,7 +98,7 @@ const CategoriesPage: React.FC = () => {
                 </Table>
             </div>
 
-            <Modal show={openModal} size="md" onClose={() => closeDeleteModal()} popup>
+            <Modal dismissible show={openModal} size="md" onClose={() => closeDeleteModal()} popup>
                 <Modal.Header />
                 <Modal.Body>
                     <div className="text-center">

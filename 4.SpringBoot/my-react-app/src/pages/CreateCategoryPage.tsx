@@ -17,6 +17,10 @@ const CreateCategoryPage: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
+            if (!category.imageFile) {
+                // @ts-ignore
+                delete category.imageFile;
+            }
             // Викликаємо мутацію для створення категорії
             await createCategory(category).unwrap();
             navigate('..'); // Перехід до нової категорії

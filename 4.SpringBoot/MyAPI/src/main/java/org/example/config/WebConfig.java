@@ -12,10 +12,16 @@ public class WebConfig implements WebMvcConfigurer {
     @Value("${upload.dir}")
     private String uploadDir;
 
+    @Value("${client.url.global}")
+    private String clientUrlGlobal;
+
+    @Value("${client.url.local}")
+    private String clientUrlLocal;
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173") // Add the appropriate origin of your client application
+                .allowedOrigins(clientUrlGlobal, clientUrlLocal) // Add the appropriate origin of your client application
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true)

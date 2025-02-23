@@ -23,8 +23,8 @@ docker build -t java-app .
 docker images --all
 docker run -it --rm -p 5086:8082 --name java-app-container java-app
 docker run -d --restart=always --name java-app-container -p 5086:8082 java-app
-docker run -d --restart=always -v d:/volumes/spring/uploading:/app/uploading --name java-app-container -p 5086:8082 java-app
-docker run -d --restart=always -v /volumes/spring/uploading:/app/uploading --name java-app-container -p 5086:8082 java-app
+docker run -d --restart=always -v d:/volumes/spring/uploading:/app/images --name java-app-container -p 5086:8082 kosta111/java-app
+docker run -d --restart=always -v /volumes/spring/uploading:/app/images --name java-app-container -p 5086:8082 kosta111/java-app
 docker ps -a
 docker stop java-app-container
 docker rm java-app-container

@@ -1,32 +1,36 @@
 package org.example.service;
 
-import org.example.entites.CategoryEntity;
+import lombok.AllArgsConstructor;
+import org.example.dto.CategoryItemDto;
+import org.example.entities.CategoryEntity;
 import org.example.dto.CategoryPostDto;
+import org.example.mapper.CategoryMapper;
 import org.example.repository.ICategoryRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
+@AllArgsConstructor
 public class CategoryService {
 
-    @Autowired
+    private FileService fileService;
+    private CategoryMapper categoryMapper;
     private ICategoryRepository categoryRepository;
 
-    @Autowired
-    private FileService fileService;
-
-    public List<CategoryEntity> getAllCategories() {
-        return categoryRepository.findAll();
+    public List<CategoryItemDto> getAllCategories() {
+        var entities = categoryRepository.findAll();
+        return categoryMapper.toDto(entities);
     }
 
-    public Optional<CategoryEntity> getCategoryById(Integer id) {
-        return categoryRepository.findById(id);
+    public CategoryItemDto getCategoryById(Integer id) {
+        var res = categoryRepository.findById(id);
+        return res.isPresent()
+                ? categoryMapper.toDto(res.get())
+                : null;
     }
 
-    public CategoryEntity createCategory(CategoryPostDto category) {
+    public CategoryItemDto createCategory(CategoryPostDto category) {
         var entity = new CategoryEntity();
         entity.setName(category.getName());
         entity.setDescription(category.getDescription());
@@ -37,11 +41,12 @@ public class CategoryService {
             var imagePath = fileService.load(newImageFile);
             entity.setImage(imagePath);
         }
-        return categoryRepository.save(entity);
+        categoryRepository.save(entity);
+        return categoryMapper.toDto(entity);
     }
 
     public boolean updateCategory(Integer id, CategoryPostDto category) {
-        var res = getCategoryById(id);
+        var res = categoryRepository.findById(id);
         if (res.isEmpty()){
             return false;
         }
@@ -59,7 +64,7 @@ public class CategoryService {
     }
 
     public boolean deleteCategory(Integer id) {
-        var res = getCategoryById(id);
+        var res = categoryRepository.findById(id);
         if (res.isEmpty()){
             return false;
         }

@@ -3,7 +3,7 @@ export interface Category {
     name: string;
     image?: string;
     description?: string;
-    creationTime: string;
+    dateCreated: string;
 }
 
 export interface ICategoryCreate {

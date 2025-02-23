@@ -1,13 +1,15 @@
-package org.example.entites;
+package org.example.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Entity
-@Table(name = "tbl_products", schema = "spring_boot")
-public class ProductEntity {
+@Table(name = "tbl_categories", schema = "spring_boot")
+public class CategoryEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -18,18 +20,13 @@ public class ProductEntity {
     @Column(length = 200, nullable = false)
     private String name;
 
-    @Column(precision = 2)
-    private float price;
-
-    private Integer amount;
-
-    @ManyToOne
-    @JoinColumn(name = "category_id")
-    private CategoryEntity category;
-
     @Column(length = 255)
     private String image;
 
     @Column(length = 40000)
     private String description;
+
+    //@JsonIgnore
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductEntity> products;
 }

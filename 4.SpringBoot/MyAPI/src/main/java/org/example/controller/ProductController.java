@@ -1,8 +1,7 @@
 package org.example.controller;
 
-import org.example.dto.ProductDto;
+import org.example.dto.ProductItemDto;
 import org.example.dto.ProductPostDto;
-import org.example.mapper.ProductMapper;
 import org.example.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,16 +17,13 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
-    @Autowired
-    private ProductMapper productMapper;
-
     @GetMapping
-    public List<ProductDto> getAllProducts() {
+    public List<ProductItemDto> getAllProducts() {
         return productService.getAllProducts();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductDto> getProductById(@PathVariable Integer id) {
+    public ResponseEntity<ProductItemDto> getProductById(@PathVariable Integer id) {
         var productDto = productService.getProductById(id);
         return productDto != null
                 ? new ResponseEntity<>(productDto, HttpStatus.OK)
@@ -35,7 +31,7 @@ public class ProductController {
     }
 
     @PostMapping(consumes = MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ProductDto> createProduct(@ModelAttribute ProductPostDto product) {
+    public ResponseEntity<ProductItemDto> createProduct(@ModelAttribute ProductPostDto product) {
         var productDto = productService.createProduct(product);
         return new ResponseEntity<>(productDto, HttpStatus.CREATED);
     }

@@ -1,45 +1,42 @@
 package org.example.service;
 
-import org.example.dto.ProductDto;
+import lombok.AllArgsConstructor;
+import org.example.dto.ProductItemDto;
 import org.example.dto.ProductPostDto;
-import org.example.entites.CategoryEntity;
-import org.example.entites.ProductEntity;
+import org.example.entities.CategoryEntity;
+import org.example.entities.ProductEntity;
+import org.example.entities.ProductImageEntity;
 import org.example.mapper.ProductMapper;
 import org.example.repository.ICategoryRepository;
+import org.example.repository.IProductImageRepository;
 import org.example.repository.IProductRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@AllArgsConstructor
 public class ProductService {
 
-    @Autowired
-    private IProductRepository productRepository;
-
-    @Autowired
-    private ICategoryRepository categoryRepository;
-
-    @Autowired
     private FileService fileService;
-
-    @Autowired
     private ProductMapper productMapper;
+    private IProductRepository productRepository;
+    private ICategoryRepository categoryRepository;
+    private IProductImageRepository productImageRepository;
 
-    public List<ProductDto> getAllProducts() {
+    public List<ProductItemDto> getAllProducts() {
         var entities = productRepository.findAll();
-        return productMapper.toDTO(entities);
+        return productMapper.toDto(entities);
     }
 
-    public ProductDto getProductById(Integer id) {
+    public ProductItemDto getProductById(Integer id) {
         var res = productRepository.findById(id);
         return res.isPresent()
-                ? productMapper.toDTO(res.get())
+                ? productMapper.toDto(res.get())
                 : null;
     }
 
-    public ProductDto createProduct(ProductPostDto product) {
+    public ProductItemDto createProduct(ProductPostDto product) {
         var entity = new ProductEntity();
         entity.setName(product.getName());
         entity.setDescription(product.getDescription());
@@ -53,19 +50,27 @@ public class ProductService {
             category.setId(categoryId);
             entity.setCategory(category);
         }
+        productRepository.save(entity);
 
-        var newImageFile = product.getImageFile();
-        if (newImageFile != null && !newImageFile.isEmpty()){
-            var imagePath = fileService.load(newImageFile);
-            entity.setImage(imagePath);
+        var imageFiles = product.getImageFiles();
+        if (imageFiles != null) {
+            var priority = 1;
+            for (var file : imageFiles) {
+                if (file == null || file.isEmpty()) continue;
+                var imageName = fileService.load(file);
+                var img = new ProductImageEntity();
+                img.setPriority(priority++);
+                img.setImageName(imageName);
+                img.setProduct(entity);
+                productImageRepository.save(img);
+            }
         }
-        var res = productRepository.save(entity);
-        return productMapper.toDTO(res);
+        return productMapper.toDto(entity);
     }
 
     public boolean updateProduct(Integer id, ProductPostDto product) {
         var res = productRepository.findById(id);
-        if (res.isEmpty()){
+        if (res.isEmpty()) {
             return false;
         }
         var entity = res.get();
@@ -80,22 +85,46 @@ public class ProductService {
             category.setId(newCategoryId);
             entity.setCategory(category);
         }
-
-        var newImageFile = product.getImageFile();
-        if (newImageFile != null && !newImageFile.isEmpty()){
-            var newImagePath = fileService.replace(entity.getImage(), newImageFile);
-            entity.setImage(newImagePath);
-        }
         productRepository.save(entity);
+        var newImageFiles = product.getImageFiles();
+
+        if (!newImageFiles.isEmpty()){
+            //remove old images
+            var oldProductImageEntities = entity.getImages();
+            for (var productImage : oldProductImageEntities) {
+                fileService.remove(productImage.getImageName());
+                productImageRepository.delete(productImage);
+            }
+
+            //save new images
+            var priority = 1;
+            for (var file : newImageFiles) {
+                if (file == null || file.isEmpty()) continue;
+                var imageName = fileService.load(file);
+                var img = new ProductImageEntity();
+                img.setPriority(priority++);
+                img.setImageName(imageName);
+                img.setProduct(entity);
+                productImageRepository.save(img);
+            }
+        }
         return true;
     }
 
     public boolean deleteProduct(Integer id) {
         var res = productRepository.findById(id);
-        if (res.isEmpty()){
+        if (res.isEmpty()) {
             return false;
         }
-        fileService.remove(res.get().getImage());
+        var entity = res.get();
+
+        //delete images
+        var productImageEntities = entity.getImages();
+        for (var productImage : productImageEntities) {
+            fileService.remove(productImage.getImageName());
+        }
+
+        //delete product
         productRepository.deleteById(id);
         return true;
     }

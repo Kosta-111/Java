@@ -1,20 +1,18 @@
 package org.example.seeder;
 
-import org.example.entites.CategoryEntity;
+import lombok.AllArgsConstructor;
+import org.example.entities.CategoryEntity;
 import org.example.repository.ICategoryRepository;
 import org.example.service.FileService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
 @Component
+@AllArgsConstructor
 public class CategorySeeder {
-
-    @Autowired
-    private ICategoryRepository categoryRepository;
-    @Autowired
     private FileService fileService;
+    private ICategoryRepository categoryRepository;
 
     public void seed() {
         if (categoryRepository.count() > 0) return;

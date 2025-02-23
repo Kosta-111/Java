@@ -1,6 +1,6 @@
 package org.example.controller;
 
-import org.example.entites.CategoryEntity;
+import org.example.dto.CategoryItemDto;
 import org.example.dto.CategoryPostDto;
 import org.example.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,7 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.Optional;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @RestController
@@ -19,20 +18,22 @@ public class CategoryController {
     private CategoryService categoryService;
 
     @GetMapping
-    public List<CategoryEntity> getAllCategories() {
+    public List<CategoryItemDto> getAllCategories() {
         return categoryService.getAllCategories();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CategoryEntity> getCategoryById(@PathVariable Integer id) {
-        Optional<CategoryEntity> category = categoryService.getCategoryById(id);
-        return category.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<CategoryItemDto> getCategoryById(@PathVariable Integer id) {
+        var categoryDto = categoryService.getCategoryById(id);
+        return categoryDto != null
+                ? new ResponseEntity<>(categoryDto, HttpStatus.OK)
+                : ResponseEntity.notFound().build();
     }
 
     @PostMapping(consumes = MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<CategoryEntity> createCategory(@ModelAttribute CategoryPostDto category) {
-        CategoryEntity createdCategory = categoryService.createCategory(category);
-        return new ResponseEntity<>(createdCategory, HttpStatus.CREATED);
+    public ResponseEntity<CategoryItemDto> createCategory(@ModelAttribute CategoryPostDto category) {
+        var categoryDto = categoryService.createCategory(category);
+        return new ResponseEntity<>(categoryDto, HttpStatus.CREATED);
     }
 
     @PutMapping(path = "/{id}", consumes = MULTIPART_FORM_DATA_VALUE)

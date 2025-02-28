@@ -1,7 +1,6 @@
-package org.example.dto;
+package org.example.dto.product;
 
 import lombok.Data;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -9,7 +8,7 @@ public class ProductItemDto {
     private Integer id;
     private String name;
     private String description;
-    private LocalDateTime dateCreated;
+    private String dateCreated;
     private float price;
     private Integer amount;
     private Integer categoryId;

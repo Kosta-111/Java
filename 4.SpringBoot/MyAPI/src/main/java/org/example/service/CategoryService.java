@@ -1,9 +1,9 @@
 package org.example.service;
 
 import lombok.AllArgsConstructor;
-import org.example.dto.CategoryItemDto;
+import org.example.dto.category.CategoryItemDto;
 import org.example.entities.CategoryEntity;
-import org.example.dto.CategoryPostDto;
+import org.example.dto.category.CategoryPostDto;
 import org.example.mapper.CategoryMapper;
 import org.example.repository.ICategoryRepository;
 import org.springframework.stereotype.Service;

@@ -1,7 +1,7 @@
 package org.example.controller;
 
-import org.example.dto.ProductItemDto;
-import org.example.dto.ProductPostDto;
+import org.example.dto.product.ProductItemDto;
+import org.example.dto.product.ProductPostDto;
 import org.example.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

@@ -1,8 +1,8 @@
 package org.example.service;
 
 import lombok.AllArgsConstructor;
-import org.example.dto.ProductItemDto;
-import org.example.dto.ProductPostDto;
+import org.example.dto.product.ProductItemDto;
+import org.example.dto.product.ProductPostDto;
 import org.example.entities.CategoryEntity;
 import org.example.entities.ProductEntity;
 import org.example.entities.ProductImageEntity;
@@ -60,7 +60,7 @@ public class ProductService {
                 var imageName = fileService.load(file);
                 var img = new ProductImageEntity();
                 img.setPriority(priority++);
-                img.setImageName(imageName);
+                img.setName(imageName);
                 img.setProduct(entity);
                 productImageRepository.save(img);
             }
@@ -92,7 +92,7 @@ public class ProductService {
             //remove old images
             var oldProductImageEntities = entity.getImages();
             for (var productImage : oldProductImageEntities) {
-                fileService.remove(productImage.getImageName());
+                fileService.remove(productImage.getName());
                 productImageRepository.delete(productImage);
             }
 
@@ -103,7 +103,7 @@ public class ProductService {
                 var imageName = fileService.load(file);
                 var img = new ProductImageEntity();
                 img.setPriority(priority++);
-                img.setImageName(imageName);
+                img.setName(imageName);
                 img.setProduct(entity);
                 productImageRepository.save(img);
             }
@@ -121,7 +121,7 @@ public class ProductService {
         //delete images
         var productImageEntities = entity.getImages();
         for (var productImage : productImageEntities) {
-            fileService.remove(productImage.getImageName());
+            fileService.remove(productImage.getName());
         }
 
         //delete product

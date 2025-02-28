@@ -1,6 +1,6 @@
 package org.example.mapper;
 
-import org.example.dto.ProductItemDto;
+import org.example.dto.product.ProductItemDto;
 import org.example.entities.ProductEntity;
 import org.example.entities.ProductImageEntity;
 import org.mapstruct.*;
@@ -18,7 +18,7 @@ public interface ProductMapper {
                 ? Collections.emptyList()
                 : productImageEntities.stream()
                     .sorted(Comparator.comparing(ProductImageEntity::getPriority))
-                    .map(ProductImageEntity::getImageName)
+                    .map(ProductImageEntity::getName)
                     .collect(Collectors.toList());
     }
 

@@ -3,8 +3,8 @@ import { Button, Modal, Table } from 'flowbite-react';
 import { HiOutlineExclamationCircle } from "react-icons/hi";
 import { LiaEdit } from "react-icons/lia";
 import { FaRegTrashAlt } from "react-icons/fa";
-import { useDeleteProductMutation, useGetAllProductsQuery } from "../services/productsApi.ts";
-import { APP_ENV } from "../env";
+import { useDeleteProductMutation, useGetAllProductsQuery } from "../../services/productsApi.ts";
+import { APP_ENV } from "../../env";
 import { Link } from "react-router-dom";
 
 const ProductsPage: React.FC = () => {
@@ -55,16 +55,16 @@ const ProductsPage: React.FC = () => {
             </div>
 
             <div className="overflow-x-auto">
-                <Table>
+                <Table className="table-fixed w-full">
                     <Table.Head>
-                        <Table.HeadCell>Id</Table.HeadCell>
-                        <Table.HeadCell>Name</Table.HeadCell>
-                        <Table.HeadCell>Image</Table.HeadCell>
-                        <Table.HeadCell>Category</Table.HeadCell>
-                        <Table.HeadCell>Description</Table.HeadCell>
-                        <Table.HeadCell>Price</Table.HeadCell>
-                        <Table.HeadCell>Amount</Table.HeadCell>
-                        <Table.HeadCell>Actions</Table.HeadCell>
+                        <Table.HeadCell className="w-12">Id</Table.HeadCell>
+                        <Table.HeadCell className="w-32">Name</Table.HeadCell>
+                        <Table.HeadCell className="w-32">Image</Table.HeadCell>
+                        <Table.HeadCell className="w-24">Category</Table.HeadCell>
+                        <Table.HeadCell className="w-64">Description</Table.HeadCell>
+                        <Table.HeadCell className="w-16">Price</Table.HeadCell>
+                        <Table.HeadCell className="w-16">Amount</Table.HeadCell>
+                        <Table.HeadCell className="w-24">Actions</Table.HeadCell>
                     </Table.Head>
                     <Table.Body className="divide-y">
                         {products?.map((product) => (
@@ -72,15 +72,17 @@ const ProductsPage: React.FC = () => {
                                 <Table.Cell>
                                     {product.id}
                                 </Table.Cell>
-                                <Table.Cell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
+                                <Table.Cell className="font-medium text-gray-900 dark:text-white">
                                     {product.name}
                                 </Table.Cell>
-                                <Table.Cell>
-                                    <img
-                                        src={(product.images.length > 0 ? APP_ENV.REMOTE_IMAGES_URL + 'medium/' + product.images[0] : "#")}
-                                        alt={product.name}
-                                        className="w-16 h-16 object-cover rounded"
-                                    />
+                                <Table.Cell className="flex flex-row gap-2">
+                                    {product.images.map((image) => (
+                                        <img
+                                            src={(APP_ENV.REMOTE_IMAGES_URL + 'medium/' + image)}
+                                            alt={product.name}
+                                            style={{maxHeight: "75px", maxWidth: "75px"}}
+                                        />
+                                    ))}
                                 </Table.Cell>
                                 <Table.Cell>
                                     {product.categoryName}

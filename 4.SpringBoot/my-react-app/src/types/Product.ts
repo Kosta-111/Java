@@ -16,7 +16,7 @@ export interface IProductCreate {
     price: number;
     amount: number;
     categoryId: number;
-    imageFiles: FileList | null;
+    imageFiles: File[] | null;
 }
 
 export interface IProductEdit extends IProductCreate {

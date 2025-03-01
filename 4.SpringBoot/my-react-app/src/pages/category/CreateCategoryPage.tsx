@@ -1,51 +1,37 @@
-import React, { useEffect, useState } from 'react';
-import { useGetCategoryByIdQuery, useUpdateCategoryMutation } from '../services/categoriesApi';
-import { useNavigate, useParams } from 'react-router-dom';
-import { ICategoryEdit } from "../types/Category";
+import React, { useState } from 'react';
+import { useCreateCategoryMutation } from '../../services/categoriesApi.ts';
+import { useNavigate } from 'react-router-dom';
+import { ICategoryCreate } from "../../types/Category.ts";
 
-const EditCategoryPage: React.FC = () => {
-    const { id } = useParams<{ id: string }>(); // Отримуємо ID категорії з URL
-
-    const [categoryUpdated, setCategoryUpdated] = useState<ICategoryEdit>({
-        id: 0,
+const CreateCategoryPage: React.FC = () => {
+    const [category, setCategory] = useState<ICategoryCreate>({
         name: '',
         description: '',
         imageFile: null
     });
-    const { data: categoryData, isLoading: isLoadingCategory, error: getCategoryError } = useGetCategoryByIdQuery(id!); // Отримуємо категорію
-    const [updateCategory, { isLoading, error }] = useUpdateCategoryMutation();
+
+    const [createCategory, { isLoading, error }] = useCreateCategoryMutation();
 
     const navigate = useNavigate();
-
-    useEffect(() => {
-        if (categoryData) { // Коли категорія завантажена, оновлюємо стейт
-            setCategoryUpdated({
-                id: categoryData.id,
-                name: categoryData.name,
-                description: categoryData.description ?? '',
-                imageFile: null
-            });
-        }
-    }, [categoryData]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            if (!categoryUpdated.imageFile) {                
+            if (!category.imageFile) {
                 // @ts-ignore
-                delete categoryUpdated.imageFile;
+                delete category.imageFile;
             }
-            // Викликаємо мутацію для редагування категорії
-            await updateCategory(categoryUpdated).unwrap();
-            navigate('..'); // Перехід до списку категорій
+            // Викликаємо мутацію для створення категорії
+            await createCategory(category).unwrap();
+            navigate('..'); // Перехід до нової категорії
         } catch (err) {
-            console.error('Error updating category:', err);
+            console.error('Error creating category:', err);
         }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setCategoryUpdated((prevCategory) => ({
+        setCategory((prevCategory) => ({
             ...prevCategory,
             [name]: value,
         }));
@@ -54,19 +40,16 @@ const EditCategoryPage: React.FC = () => {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const file = e.target.files[0];
-            setCategoryUpdated((prevCategory) => ({
+            setCategory((prevCategory) => ({
                 ...prevCategory,
                 imageFile: file,
             }));
         }
     };
 
-    if (isLoadingCategory) return <p>Loading...</p>;
-    if (getCategoryError) return <p>Error loading category data.</p>;
-
     return (
         <div className="max-w-xl mx-auto p-6 bg-white shadow-md rounded-lg">
-            <h1 className="text-2xl font-bold text-center mb-6">Edit Category</h1>
+            <h1 className="text-2xl font-bold text-center mb-6">Create Category</h1>
             <button onClick={() => navigate(-1)}
                 className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-700 mb-4"
             >
@@ -82,7 +65,7 @@ const EditCategoryPage: React.FC = () => {
                         id="name"
                         name="name"
                         type="text"
-                        value={categoryUpdated.name}
+                        value={category.name}
                         onChange={handleChange}
                         className="w-full p-2 border border-gray-300 rounded mt-2"
                         required
@@ -96,7 +79,7 @@ const EditCategoryPage: React.FC = () => {
                     <textarea
                         id="description"
                         name="description"
-                        value={categoryUpdated.description}
+                        value={category.description}
                         onChange={handleChange}
                         className="w-full p-2 border border-gray-300 rounded mt-2"
                         rows={4}
@@ -122,14 +105,14 @@ const EditCategoryPage: React.FC = () => {
                         disabled={isLoading}
                         className="bg-blue-500 text-white p-2 rounded w-full md:w-1/2 mt-4"
                     >
-                        {isLoading ? 'Updating...' : 'Update Category'}
+                        {isLoading ? 'Creating...' : 'Create Category'}
                     </button>
                 </div>
 
-                {error && <p className="text-red-500 mt-2">Error updating category!</p>}
+                {error && <p className="text-red-500 mt-2">Error creating category!</p>}
             </form>
         </div>
     );
 };
 
-export default EditCategoryPage;
+export default CreateCategoryPage;

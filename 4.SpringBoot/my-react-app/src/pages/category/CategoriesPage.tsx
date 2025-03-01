@@ -3,8 +3,8 @@ import { Button, Modal, Table } from 'flowbite-react';
 import { HiOutlineExclamationCircle } from "react-icons/hi";
 import { LiaEdit } from "react-icons/lia";
 import { FaRegTrashAlt } from "react-icons/fa";
-import { useDeleteCategoryMutation, useGetAllCategoriesQuery } from '../services/categoriesApi';
-import { APP_ENV } from "../env";
+import { useDeleteCategoryMutation, useGetAllCategoriesQuery } from '../../services/categoriesApi.ts';
+import { APP_ENV } from "../../env";
 import { Link } from "react-router-dom";
 
 const CategoriesPage: React.FC = () => {

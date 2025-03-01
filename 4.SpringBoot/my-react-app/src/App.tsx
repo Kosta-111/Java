@@ -2,11 +2,11 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
-import CategoriesPage from './pages/CategoriesPage';
-import CreateCategoryPage from "./pages/CreateCategoryPage";
-import EditCategoryPage from './pages/EditCategoryPage';
-import ProductsPage from "./pages/ProductsPage.tsx";
-import CreateProductPage from "./pages/CreateProductPage.tsx";
+import CategoriesPage from './pages/category/CategoriesPage.tsx';
+import CreateCategoryPage from "./pages/category/CreateCategoryPage.tsx";
+import EditCategoryPage from './pages/category/EditCategoryPage.tsx';
+import ProductsPage from "./pages/product/ProductsPage.tsx";
+import CreateProductPage from "./pages/product/CreateProductPage.tsx";
 
 const App: React.FC = () => (
   <Router>

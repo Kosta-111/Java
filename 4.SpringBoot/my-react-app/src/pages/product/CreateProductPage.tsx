@@ -73,9 +73,9 @@ const CreateProductPage: React.FC = () => {
                         label="Категорія"
                         name="categoryId"
                         htmlFor="categoryId"
-                        rules={[{required: true, message: "Це поле є обов'язковим!"}]}
+                        rules={[{required: true, message: "It is a required field!"}]}
                     >
-                        <Select placeholder="Оберіть категорію: " options={categoriesData}/>
+                        <Select placeholder="Оберіть категорію" options={categoriesData}/>
                     </Form.Item>
                 )}
 
@@ -87,7 +87,7 @@ const CreateProductPage: React.FC = () => {
                         {required: true, message: "It is a required field!"},
                     ]}
                 >
-                    <Input autoComplete="price" className={"w-full p-2 border border-gray-300 rounded mt-2"} />
+                    <Input type="number" autoComplete="price" className={"w-full p-2 border border-gray-300 rounded mt-2"} />
                 </Form.Item>
 
                 <Form.Item
@@ -98,7 +98,7 @@ const CreateProductPage: React.FC = () => {
                         {required: true, message: "It is a required field!"},
                     ]}
                 >
-                    <Input autoComplete="amount" className={"w-full p-2 border border-gray-300 rounded mt-2"} />
+                    <Input type="number" autoComplete="amount" className={"w-full p-2 border border-gray-300 rounded mt-2"} />
                 </Form.Item>
 
                 <Form.Item
@@ -133,11 +133,11 @@ const CreateProductPage: React.FC = () => {
                                     alt="preview"
                                     style={{maxWidth: "150px", maxHeight: "150px"}}
                                 />
-                                <button
-                                    onClick={() => handleRemoveFile(index)}
-                                    className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
-                                >
-                                    <CloseCircleOutlined/>
+                                <button onClick={() => handleRemoveFile(index)}>
+                                    <CloseCircleOutlined
+                                        className="absolute top-0 right-0 bg-red-500 text-white rounded-full"
+                                        style={{ fontSize: '26px' }}
+                                    />
                                 </button>
                             </div>
                         ))}

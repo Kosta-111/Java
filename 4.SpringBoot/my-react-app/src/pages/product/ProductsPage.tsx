@@ -75,12 +75,12 @@ const ProductsPage: React.FC = () => {
                                 <Table.Cell className="font-medium text-gray-900 dark:text-white">
                                     {product.name}
                                 </Table.Cell>
-                                <Table.Cell className="flex flex-row gap-2">
+                                <Table.Cell>
                                     {product.images.map((image) => (
                                         <img
                                             src={(APP_ENV.REMOTE_IMAGES_URL + 'medium/' + image)}
                                             alt={product.name}
-                                            style={{maxHeight: "75px", maxWidth: "75px"}}
+                                            style={{maxHeight: "75px", maxWidth: "75px", float: "left", marginRight: "2px"}}
                                         />
                                     ))}
                                 </Table.Cell>

@@ -1,24 +1,44 @@
-import React, { useState } from 'react';
-import { useCreateProductMutation } from "../../services/productsApi.ts";
-import { useNavigate } from 'react-router-dom';
-import { IProductCreate } from "../../types/Product.ts";
+import React, {useEffect, useState} from 'react';
+import {useGetProductByIdQuery, useUpdateProductMutation} from "../../services/productsApi.ts";
+import { useNavigate, useParams } from 'react-router-dom';
+import { IProductEdit } from "../../types/Product.ts";
 import { useGetAllCategoriesQuery } from "../../services/categoriesApi.ts";
 import { Form, Input, Select } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import { CloseCircleOutlined } from '@ant-design/icons';
 import { SortableContainer, SortableElement } from 'react-sortable-hoc';
+import {APP_ENV} from "../../env";
 
-const CreateProductPage: React.FC = () => {
+const EditProductPage: React.FC = () => {
+    const { id } = useParams<{ id: string }>(); // Отримуємо ID продукту з URL
     const { data: categories, isLoading: categoriesLoading, error: categoriesError } = useGetAllCategoriesQuery();
-    const [createProduct, { isLoading, error }] = useCreateProductMutation();
+    const { data: productData, isLoading: isLoadingProduct, error: getProductError } = useGetProductByIdQuery(id!); // Отримуємо продукт
+    const [updateProduct, { isLoading, error }] = useUpdateProductMutation();
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const navigate = useNavigate();
-    const [form] = Form.useForm<IProductCreate>();
+    const [form] = Form.useForm<IProductEdit>();
 
     const categoriesData = categories?.map(item => ({
         label: item.name,
         value: item.id,
     }));
+
+    useEffect(() => {
+        if (productData?.images) {
+            fetchFiles(productData.images);  // Викликаємо функцію для отримання файлів
+        }
+    }, [productData]);
+
+    const fetchFiles = async (images: string[]) => {
+        const files = await Promise.all(
+            images.map(async (imageName: string) => {
+                const res = await fetch(APP_ENV.REMOTE_IMAGES_URL + 'large/' + imageName);
+                const blobFile = await res.blob();
+                return new File([blobFile], imageName, { type: blobFile.type });
+            })
+        );
+        setSelectedFiles(files);
+    };
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files) {
@@ -31,13 +51,15 @@ const CreateProductPage: React.FC = () => {
         setSelectedFiles(prev => prev.filter((_, i) => i !== index)); // Видалення файлів
     };
 
-    const onSubmit = async (values: IProductCreate) => {
+    const onSubmit = async (values: IProductEdit) => {
         try {
+            values.id = productData!.id;
             values.imageFiles = selectedFiles;
-            await createProduct(values).unwrap();
-            navigate('..');
+            // Оновлення продукту
+            await updateProduct(values).unwrap();
+            navigate('..'); // Перехід після успішного оновлення
         } catch (err) {
-            console.error('Error creating product:', err);
+            console.error('Error updating product:', err);
         }
     };
 
@@ -55,7 +77,6 @@ const CreateProductPage: React.FC = () => {
                 alt="preview"
                 style={{ maxWidth: "150px", maxHeight: "150px" }}
             />
-            {/* Кнопка видалення */}
             <button onClick={() => { handleRemoveFile(ind) }} >
                 <CloseCircleOutlined
                     className="absolute top-0 right-0 bg-red-500 text-white rounded-full"
@@ -74,9 +95,12 @@ const CreateProductPage: React.FC = () => {
         </div>
     ));
 
+    if (isLoadingProduct) return <p>Loading...</p>;
+    if (getProductError) return <p>Error loading product data.</p>;
+
     return (
         <div className="max-w-xl mx-auto p-6 bg-white shadow-md rounded-lg">
-            <h1 className="text-2xl font-bold text-center mb-6">Create Product</h1>
+            <h1 className="text-2xl font-bold text-center mb-6">Edit Product</h1>
             <button onClick={() => navigate(-1)}
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-700 mb-4"
             >
@@ -88,6 +112,7 @@ const CreateProductPage: React.FC = () => {
                     label="Назва"
                     name="name"
                     htmlFor="name"
+                    initialValue={productData?.name}
                     rules={[
                         { required: true, message: "It is a required field!" },
                         { min: 3, message: "Name must have at least 3 symbols!" },
@@ -105,6 +130,7 @@ const CreateProductPage: React.FC = () => {
                         label="Категорія"
                         name="categoryId"
                         htmlFor="categoryId"
+                        initialValue={productData?.categoryId}
                         rules={[{ required: true, message: "It is a required field!" }]}
                     >
                         <Select placeholder="Оберіть категорію" options={categoriesData} />
@@ -115,6 +141,7 @@ const CreateProductPage: React.FC = () => {
                     label="Ціна"
                     name="price"
                     htmlFor="price"
+                    initialValue={productData?.price}
                     rules={[
                         { required: true, message: "It is a required field!" },
                     ]}
@@ -126,6 +153,7 @@ const CreateProductPage: React.FC = () => {
                     label="Кількість"
                     name="amount"
                     htmlFor="amount"
+                    initialValue={productData?.amount}
                     rules={[
                         { required: true, message: "It is a required field!" },
                     ]}
@@ -137,6 +165,7 @@ const CreateProductPage: React.FC = () => {
                     label="Опис"
                     name="description"
                     htmlFor="description"
+                    initialValue={productData?.description}
                     rules={[
                         { required: true, message: "It is a required field!" },
                     ]}
@@ -166,15 +195,14 @@ const CreateProductPage: React.FC = () => {
                         disabled={isLoading}
                         className="bg-blue-500 text-white p-2 rounded w-full md:w-1/2 mt-4"
                     >
-                        {isLoading ? 'Creating...' : 'Create Product'}
+                        {isLoading ? 'Updating...' : 'Update Product'}
                     </button>
                 </div>
 
-                {error && <p className="text-red-500 mt-2">Error creating product!</p>}
+                {error && <p className="text-red-500 mt-2">Error updating product!</p>}
             </Form>
         </div>
     );
 };
 
-export default CreateProductPage;
-
+export default EditProductPage;

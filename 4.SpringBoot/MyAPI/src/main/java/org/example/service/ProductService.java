@@ -86,17 +86,17 @@ public class ProductService {
             entity.setCategory(category);
         }
         productRepository.save(entity);
+
+        //remove old images
+        var oldProductImageEntities = entity.getImages();
+        for (var productImage : oldProductImageEntities) {
+            fileService.remove(productImage.getName());
+            productImageRepository.delete(productImage);
+        }
+
+        //save new images
         var newImageFiles = product.getImageFiles();
-
         if (!newImageFiles.isEmpty()){
-            //remove old images
-            var oldProductImageEntities = entity.getImages();
-            for (var productImage : oldProductImageEntities) {
-                fileService.remove(productImage.getName());
-                productImageRepository.delete(productImage);
-            }
-
-            //save new images
             var priority = 1;
             for (var file : newImageFiles) {
                 if (file == null || file.isEmpty()) continue;

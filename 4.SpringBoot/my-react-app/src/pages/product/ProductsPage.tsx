@@ -80,7 +80,7 @@ const ProductsPage: React.FC = () => {
                                         <img
                                             src={(APP_ENV.REMOTE_IMAGES_URL + 'medium/' + image)}
                                             alt={product.name}
-                                            style={{maxHeight: "75px", maxWidth: "75px", float: "left", marginRight: "2px"}}
+                                            style={{maxHeight: "75px", maxWidth: "75px", float: "left", margin: "3px"}}
                                         />
                                     ))}
                                 </Table.Cell>
@@ -98,9 +98,9 @@ const ProductsPage: React.FC = () => {
                                 </Table.Cell>
                                 <Table.Cell>
                                     <div className="flex">
-                                        <a href='#'>
+                                        <Link to={`edit/${product.id}`}>
                                             <LiaEdit className="mx-1 h-6 w-6 text-gray-700" />
-                                        </a>
+                                        </Link>
                                         <a href='#'>
                                             <FaRegTrashAlt onClick={() => openDeleteModal(product.id)} className="mx-1 h-6 w-6 text-red-800" />
                                         </a>

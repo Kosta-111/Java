@@ -1,20 +1,21 @@
 import React, {useEffect, useState} from 'react';
-import {useGetProductByIdQuery, useUpdateProductMutation} from "../../services/productsApi.ts";
-import { useNavigate, useParams } from 'react-router-dom';
-import { IProductEdit } from "../../types/Product.ts";
-import { useGetAllCategoriesQuery } from "../../services/categoriesApi.ts";
-import { Form, Input, Select } from "antd";
+import {useUpdateProductMutation, useGetProductByIdQuery} from "../../services/productsApi.ts";
+import {useNavigate, useParams} from 'react-router-dom';
+import {IProductEdit} from "../../types/Product.ts";
+import {useGetAllCategoriesQuery} from "../../services/categoriesApi.ts";
+import {Form, Input, Select, Upload, UploadFile} from "antd";
 import TextArea from "antd/es/input/TextArea";
-import { CloseCircleOutlined } from '@ant-design/icons';
-import { SortableContainer, SortableElement } from 'react-sortable-hoc';
+import {PlusOutlined} from '@ant-design/icons';
+import {DragDropContext, Draggable, Droppable, DropResult} from "@hello-pangea/dnd";
 import {APP_ENV} from "../../env";
 
 const EditProductPage: React.FC = () => {
-    const { id } = useParams<{ id: string }>(); // Отримуємо ID продукту з URL
-    const { data: categories, isLoading: categoriesLoading, error: categoriesError } = useGetAllCategoriesQuery();
-    const { data: productData, isLoading: isLoadingProduct, error: getProductError } = useGetProductByIdQuery(id!); // Отримуємо продукт
-    const [updateProduct, { isLoading, error }] = useUpdateProductMutation();
-    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+
+    const {id} = useParams<string>();
+    const {data: categories, isLoading: categoriesLoading, error: categoriesError} = useGetAllCategoriesQuery();
+    const {data: product, isLoading: productLoading, error: productError} = useGetProductByIdQuery(id!);
+    const [updateProduct, {isLoading, error}] = useUpdateProductMutation();
+    const [selectedFiles, setSelectedFiles] = useState<UploadFile[]>([]);
     const navigate = useNavigate();
     const [form] = Form.useForm<IProductEdit>();
 
@@ -23,80 +24,50 @@ const EditProductPage: React.FC = () => {
         value: item.id,
     }));
 
-    useEffect(() => {
-        if (productData?.images) {
-            fetchFiles(productData.images);  // Викликаємо функцію для отримання файлів
-        }
-    }, [productData]);
-
-    const fetchFiles = async (images: string[]) => {
-        const files = await Promise.all(
-            images.map(async (imageName: string) => {
-                const res = await fetch(APP_ENV.REMOTE_IMAGES_URL + 'large/' + imageName);
-                const blobFile = await res.blob();
-                return new File([blobFile], imageName, { type: blobFile.type });
-            })
-        );
-        setSelectedFiles(files);
-    };
-
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (event.target.files) {
-            const filesArray = Array.from(event.target.files);
-            setSelectedFiles(prev => [...prev, ...filesArray]);
-        }
-    };
-
-    const handleRemoveFile = (index: number) => {
-        setSelectedFiles(prev => prev.filter((_, i) => i !== index)); // Видалення файлів
-    };
-
     const onSubmit = async (values: IProductEdit) => {
         try {
-            values.id = productData!.id;
-            values.imageFiles = selectedFiles;
-            // Оновлення продукту
+            values.imageFiles = selectedFiles.map(x=> x.originFileObj as File);
+            values.id = product!.id;
+
+            // Викликаємо мутацію для створення продукту
             await updateProduct(values).unwrap();
-            navigate('..'); // Перехід після успішного оновлення
+            navigate('..'); // Перехід до нового продукту
         } catch (err) {
-            console.error('Error updating product:', err);
+            console.error('Error creating product:', err);
         }
+    }
+
+    const onDragEnd = (result: DropResult) => {
+        if (!result.destination) return;
+        const reorderedFiles = Array.from(selectedFiles);
+        const [movedFile] = reorderedFiles.splice(result.source.index, 1);
+        reorderedFiles.splice(result.destination.index, 0, movedFile);
+        setSelectedFiles(reorderedFiles);
     };
 
-    const onSortEnd = ({ oldIndex, newIndex }: { oldIndex: number, newIndex: number }) => {
-        const updatedFiles = Array.from(selectedFiles);
-        const [removed] = updatedFiles.splice(oldIndex, 1);
-        updatedFiles.splice(newIndex, 0, removed);
-        setSelectedFiles(updatedFiles);
+    const handleImageChange = (info: { fileList: UploadFile[] }) => {
+        const newFileList = info.fileList.map((file, index) => ({
+            ...file,
+            uid: file.uid || Date.now().toString(),
+            order: index,
+        }));
+        setSelectedFiles([...selectedFiles, ...newFileList]);
     };
 
-    const SortableItem = SortableElement(({ file, ind }: { file: File, ind: number }) => (
-        <div className="relative">
-            <img
-                src={URL.createObjectURL(file)}
-                alt="preview"
-                style={{ maxWidth: "150px", maxHeight: "150px" }}
-            />
-            <button onClick={() => { handleRemoveFile(ind) }} >
-                <CloseCircleOutlined
-                    className="absolute top-0 right-0 bg-red-500 text-white rounded-full"
-                    style={{ fontSize: '26px' }}
-                />
-            </button>
-        </div>
-    ));
+    useEffect(() => {
+        if (product) {
+            form.setFieldsValue({...product});
+            const files = product?.images.map(x => ({
+                uid: x,
+                url: `${APP_ENV.REMOTE_IMAGES_URL}medium/${x}`,
+                originFileObj: new File([new Blob([''])], x, { type: 'old-image' })
+            }) as UploadFile);
+            setSelectedFiles(files);
+        }
+    }, [product]);
 
-    const SortableList = SortableContainer(({ files }: { files: File[] }) => (
-        <div className="grid grid-cols-3 gap-4 mt-4">
-            {files.map((file, index) => (
-                // @ts-ignore
-                <SortableItem key={index} index={index} ind={index} file={file} />
-            ))}
-        </div>
-    ));
-
-    if (isLoadingProduct) return <p>Loading...</p>;
-    if (getProductError) return <p>Error loading product data.</p>;
+    if (productLoading) return <p>Loading...</p>;
+    if (productError) return <p>Error loading product data.</p>;
 
     return (
         <div className="max-w-xl mx-auto p-6 bg-white shadow-md rounded-lg">
@@ -112,10 +83,9 @@ const EditProductPage: React.FC = () => {
                     label="Назва"
                     name="name"
                     htmlFor="name"
-                    initialValue={productData?.name}
                     rules={[
-                        { required: true, message: "It is a required field!" },
-                        { min: 3, message: "Name must have at least 3 symbols!" },
+                        {required: true, message: "It is a required field!"},
+                        {min: 3, message: "Name must have at least 3 symbols!"},
                     ]}
                 >
                     <Input autoComplete="name" className={"w-full p-2 border border-gray-300 rounded mt-2"} />
@@ -130,10 +100,9 @@ const EditProductPage: React.FC = () => {
                         label="Категорія"
                         name="categoryId"
                         htmlFor="categoryId"
-                        initialValue={productData?.categoryId}
-                        rules={[{ required: true, message: "It is a required field!" }]}
+                        rules={[{required: true, message: "It is a required field!"}]}
                     >
-                        <Select placeholder="Оберіть категорію" options={categoriesData} />
+                        <Select placeholder="Оберіть категорію" options={categoriesData}/>
                     </Form.Item>
                 )}
 
@@ -141,9 +110,8 @@ const EditProductPage: React.FC = () => {
                     label="Ціна"
                     name="price"
                     htmlFor="price"
-                    initialValue={productData?.price}
                     rules={[
-                        { required: true, message: "It is a required field!" },
+                        {required: true, message: "It is a required field!"},
                     ]}
                 >
                     <Input type="number" autoComplete="price" className={"w-full p-2 border border-gray-300 rounded mt-2"} />
@@ -153,9 +121,8 @@ const EditProductPage: React.FC = () => {
                     label="Кількість"
                     name="amount"
                     htmlFor="amount"
-                    initialValue={productData?.amount}
                     rules={[
-                        { required: true, message: "It is a required field!" },
+                        {required: true, message: "It is a required field!"},
                     ]}
                 >
                     <Input type="number" autoComplete="amount" className={"w-full p-2 border border-gray-300 rounded mt-2"} />
@@ -165,29 +132,56 @@ const EditProductPage: React.FC = () => {
                     label="Опис"
                     name="description"
                     htmlFor="description"
-                    initialValue={productData?.description}
                     rules={[
-                        { required: true, message: "It is a required field!" },
+                        {required: true, message: "It is a required field!"},
                     ]}
                 >
                     <TextArea rows={4} placeholder="Введіть текст..." maxLength={200} allowClear />
                 </Form.Item>
 
-                <Form.Item label="Фото продукту" name="imageFiles">
-                    <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="w-full p-2 border border-gray-300 rounded mt-2"
-                    />
-                </Form.Item>
+                <DragDropContext onDragEnd={onDragEnd}>
+                    <Droppable droppableId="upload-list" direction="horizontal">
+                        {(provided) => (
+                            <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap gap-2">
+                                {selectedFiles.map((file, index) => (
+                                    <Draggable key={file.uid} draggableId={file.uid} index={index}>
+                                        {(provided) => (
+                                            <div
+                                                ref={provided.innerRef}
+                                                {...provided.draggableProps}
+                                                {...provided.dragHandleProps}
+                                            >
+                                                <Upload
+                                                    listType="picture-card"
+                                                    fileList={[file]}
+                                                    onRemove={() => {
+                                                        const newFileList = selectedFiles.filter(f => f.uid !== file.uid);
+                                                        setSelectedFiles(newFileList);
+                                                    }}
+                                                />
+                                            </div>
+                                        )}
+                                    </Draggable>
+                                ))}
+                                {provided.placeholder}
+                            </div>
+                        )}
+                    </Droppable>
+                </DragDropContext>
 
-                {/* Відображення вибраних зображень з можливістю перетягувати */}
-                {selectedFiles.length > 0 && (
-                    // @ts-ignore
-                    <SortableList files={selectedFiles} distance={1} onSortEnd={onSortEnd} axis="xy" />
-                )}
+                <Upload
+                    multiple
+                    listType="picture-card"
+                    beforeUpload={() => false}
+                    onChange={handleImageChange}
+                    fileList={[]}
+                    accept="image/*"
+                >
+                    <div>
+                        <PlusOutlined/>
+                        <div style={{marginTop: 8}}>Додати</div>
+                    </div>
+                </Upload>
 
                 <div className="flex justify-center">
                     <button
@@ -195,10 +189,9 @@ const EditProductPage: React.FC = () => {
                         disabled={isLoading}
                         className="bg-blue-500 text-white p-2 rounded w-full md:w-1/2 mt-4"
                     >
-                        {isLoading ? 'Updating...' : 'Update Product'}
+                        {isLoading ? 'Saving...' : 'Update Product'}
                     </button>
                 </div>
-
                 {error && <p className="text-red-500 mt-2">Error updating product!</p>}
             </Form>
         </div>

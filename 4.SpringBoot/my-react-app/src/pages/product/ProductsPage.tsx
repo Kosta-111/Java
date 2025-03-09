@@ -78,6 +78,7 @@ const ProductsPage: React.FC = () => {
                                 <Table.Cell>
                                     {product.images.map((image) => (
                                         <img
+                                            key={image}
                                             src={(APP_ENV.REMOTE_IMAGES_URL + 'medium/' + image)}
                                             alt={product.name}
                                             style={{maxHeight: "75px", maxWidth: "75px", float: "left", margin: "3px"}}

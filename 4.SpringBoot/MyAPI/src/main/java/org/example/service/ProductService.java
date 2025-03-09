@@ -12,7 +12,9 @@ import org.example.repository.IProductImageRepository;
 import org.example.repository.IProductRepository;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @AllArgsConstructor
@@ -88,25 +90,55 @@ public class ProductService {
         productRepository.save(entity);
 
         //remove old images
+        //Отримуємо імена файлів усіх, що нам прийли
+        var updatedImageFiles = product.getImageFiles();
+        if (updatedImageFiles == null){
+            updatedImageFiles = new ArrayList<>();
+        }
+
+        List<String> oldImagesNames = new ArrayList<String>();
+
+        for (var item : updatedImageFiles) {
+            if (item.getContentType().equals("old-image")) {
+                oldImagesNames.add(item.getOriginalFilename());
+            }
+        }
+
         var oldProductImageEntities = entity.getImages();
-        for (var productImage : oldProductImageEntities) {
+        //список фото, які потрібно видалити
+        var listDelete = oldProductImageEntities.stream()
+                .filter(img -> !oldImagesNames.contains(img.getName()))
+                .toList();
+
+        //видаляємо фото на сервері та ProductImageEntities в БД
+        for (var productImage : listDelete) {
             fileService.remove(productImage.getName());
             productImageRepository.delete(productImage);
         }
 
-        //save new images
-        var newImageFiles = product.getImageFiles();
-        if (!newImageFiles.isEmpty()){
-            var priority = 1;
-            for (var file : newImageFiles) {
-                if (file == null || file.isEmpty()) continue;
+        //save new images or update priority
+        var priority = 1;
+        for (var file : updatedImageFiles) {
+
+            if (file.getContentType().equals("old-image")) {
+                var result = oldProductImageEntities.stream()
+                        .filter(img -> img.getName().equals(file.getOriginalFilename()))
+                        .findFirst();
+                if (result.isPresent()){
+                    var productImage = result.get();
+                    productImage.setPriority(priority);
+                    productImageRepository.save(productImage);
+                }
+            }
+            else {
                 var imageName = fileService.load(file);
                 var img = new ProductImageEntity();
-                img.setPriority(priority++);
+                img.setPriority(priority);
                 img.setName(imageName);
                 img.setProduct(entity);
                 productImageRepository.save(img);
             }
+            priority++;
         }
         return true;
     }

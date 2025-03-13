@@ -14,7 +14,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -71,75 +73,56 @@ public class ProductService {
     }
 
     public boolean updateProduct(Integer id, ProductPostDto product) {
-        var res = productRepository.findById(id);
-        if (res.isEmpty()) {
-            return false;
-        }
-        var entity = res.get();
+        var entity = productRepository.findById(id).orElseThrow();
+
         entity.setName(product.getName());
         entity.setDescription(product.getDescription());
         entity.setAmount(product.getAmount());
         entity.setPrice(product.getPrice());
 
-        var newCategoryId = product.getCategoryId();
-        if (newCategoryId != entity.getCategory().getId() && categoryRepository.existsById(newCategoryId)){
-            var category = new CategoryEntity();
-            category.setId(newCategoryId);
-            entity.setCategory(category);
-        }
+        var category = new CategoryEntity();
+        category.setId(product.getCategoryId());
+        entity.setCategory(category);
         productRepository.save(entity);
 
-        //remove old images
-        //Отримуємо імена файлів усіх, що нам прийли
-        var updatedImageFiles = product.getImageFiles();
-        if (updatedImageFiles == null){
-            updatedImageFiles = new ArrayList<>();
-        }
+        // Отримуємо список старих зображень у базі
+        Map<String, ProductImageEntity> existingImages = entity.getImages().stream()
+                .collect(Collectors.toMap(ProductImageEntity::getName, img -> img));
 
-        List<String> oldImagesNames = new ArrayList<String>();
+        List<ProductImageEntity> updatedImages = new ArrayList<>();
+        var productFilesCount = product.getImageFiles() == null ? 0 : product.getImageFiles().size();
 
-        for (var item : updatedImageFiles) {
-            if (item.getContentType().equals("old-image")) {
-                oldImagesNames.add(item.getOriginalFilename());
-            }
-        }
+        for (int i = 0; i < productFilesCount; i++) {
+            var img = product.getImageFiles().get(i);
 
-        var oldProductImageEntities = entity.getImages();
-        //список фото, які потрібно видалити
-        var listDelete = oldProductImageEntities.stream()
-                .filter(img -> !oldImagesNames.contains(img.getName()))
-                .toList();
-
-        //видаляємо фото на сервері та ProductImageEntities в БД
-        for (var productImage : listDelete) {
-            fileService.remove(productImage.getName());
-            productImageRepository.delete(productImage);
-        }
-
-        //save new images or update priority
-        var priority = 1;
-        for (var file : updatedImageFiles) {
-
-            if (file.getContentType().equals("old-image")) {
-                var result = oldProductImageEntities.stream()
-                        .filter(img -> img.getName().equals(file.getOriginalFilename()))
-                        .findFirst();
-                if (result.isPresent()){
-                    var productImage = result.get();
-                    productImage.setPriority(priority);
-                    productImageRepository.save(productImage);
+            if ("old-image".equals(img.getContentType())) {
+                // Оновлення пріоритету старого зображення
+                var imageName = img.getOriginalFilename();
+                if (existingImages.containsKey(imageName)) {
+                    var oldImage = existingImages.get(imageName);
+                    oldImage.setPriority(i + 1);
+                    productImageRepository.save(oldImage);
+                    updatedImages.add(oldImage);
                 }
+            } else {
+                // Додавання нового зображення
+                var imageName = fileService.load(img);
+                var newImage = new ProductImageEntity();
+                newImage.setName(imageName);
+                newImage.setPriority(i + 1);
+                newImage.setProduct(entity);
+                productImageRepository.save(newImage);
             }
-            else {
-                var imageName = fileService.load(file);
-                var img = new ProductImageEntity();
-                img.setPriority(priority);
-                img.setName(imageName);
-                img.setProduct(entity);
-                productImageRepository.save(img);
-            }
-            priority++;
         }
+        List<Integer> removeIds = new ArrayList<>();
+        // Видалення зображень, яких немає в оновленому списку
+        for (var img : entity.getImages()) {
+            if (!updatedImages.contains(img)) {
+                fileService.remove(img.getName());
+                removeIds.add(img.getId());
+            }
+        }
+        productImageRepository.deleteAllByIdInBatch(removeIds);
         return true;
     }
 

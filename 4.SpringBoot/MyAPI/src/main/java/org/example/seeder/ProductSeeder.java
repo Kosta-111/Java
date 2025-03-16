@@ -20,7 +20,7 @@ public class ProductSeeder {
     private IProductImageRepository productImageRepository;
 
     public void seed() {
-        if(productRepository.count() > 0) return;
+        if (productRepository.count() > 0) return;
 
         var categories = categoryRepository.findAll();
         var random = new Random();

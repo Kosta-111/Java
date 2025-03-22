@@ -1,13 +1,12 @@
 package org.example.dto.user;
 
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserRegisterDto {
-    private String username;
-    private String password;
+public class UserGoogleAuthDto {
+    private String token;
 }

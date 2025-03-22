@@ -10,6 +10,8 @@ import org.example.repository.IUserRoleRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 @Component
 @RequiredArgsConstructor
 public class UserSeeder {
@@ -24,6 +26,7 @@ public class UserSeeder {
         var admin = new UserEntity();
         admin.setUsername("admin");
         admin.setPassword(passwordEncoder.encode("admin123"));
+        admin.setRegisterTime(LocalDateTime.now());
         admin = userRepository.save(admin);
 
         RoleEntity adminRole = roleRepository.findByName("ADMIN").orElseThrow();

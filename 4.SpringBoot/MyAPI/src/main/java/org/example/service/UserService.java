@@ -21,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @Service
@@ -32,6 +33,7 @@ public class UserService {
     private final IUserRoleRepository userRoleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final FileService fileService;
 
     @Value("${google.api.userinfo}")
     private String googleUserInfoUrl;
@@ -54,6 +56,13 @@ public class UserService {
         var userEntity = new UserEntity();
         userEntity.setUsername(username);
         userEntity.setPassword(passwordEncoder.encode(password));
+        userEntity.setRegisterTime(LocalDateTime.now());
+        //set image
+        var imageFile = dto.getImageFile();
+        if (imageFile != null && !imageFile.isEmpty()){
+            var imagePath = fileService.load(imageFile);
+            userEntity.setImage(imagePath);
+        }
         userEntity = userRepository.save(userEntity);
 
         RoleEntity userRole = roleRepository.findByName("USER").orElseThrow();
@@ -81,7 +90,7 @@ public class UserService {
         ResponseEntity<String> response = restTemplate.exchange(googleUserInfoUrl, HttpMethod.GET, entity, String.class);
 
         if (!response.getStatusCode().is2xxSuccessful()) {
-            return null;
+            throw new RuntimeException("Invalid google response!");
         }
         var mapper = new ObjectMapper();
         Map<String, String> userInfo = mapper.readValue(response.getBody(), new TypeReference<Map<String, String>>() {});
@@ -92,11 +101,19 @@ public class UserService {
             userEntity = new UserEntity();
             userEntity.setUsername(userInfo.get("email"));
             userEntity.setPassword("");
-            userRepository.save(userEntity);
+            userEntity.setRegisterTime(LocalDateTime.now());
+            userEntity.setGoogleUser(true);
+            var pictureUrl = userInfo.get("picture");
+            if (pictureUrl != null) {
+                userEntity.setImage(fileService.load(pictureUrl));
+            }
+            userEntity = userRepository.save(userEntity);
             //userInfo.get("given_name"),
-            //userInfo.get("family_name"),
-            //storageService.saveImage(userInfo.get("picture"), FileFormats.WEBP),
-            //userRepo.saveAndFlush(user);
+            //userInfo.get("family_name")
+
+            RoleEntity userRole = roleRepository.findByName("USER").orElseThrow();
+            UserRoleEntity ur = new UserRoleEntity(null, userEntity, userRole);
+            userRoleRepository.save(ur);
         }
         return jwtService.generateAccessToken(userEntity);
     }

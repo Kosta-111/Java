@@ -9,6 +9,7 @@ import org.example.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -18,8 +19,8 @@ public class AuthController {
     private final UserService userService;
 
     // Реєстрація нового користувача
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody UserRegisterDto userDto) {
+    @PostMapping(path = "/register", consumes = MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> register(@Valid @ModelAttribute UserRegisterDto userDto) {
         try {
             userService.registerUser(userDto);
             return ResponseEntity.ok(Map.of("message", "User '" + userDto.getUsername() + "' registered successfully!"));
@@ -41,10 +42,10 @@ public class AuthController {
     }
 
     @PostMapping("/google")
-    public ResponseEntity<String> googleLogin(@RequestBody UserGoogleAuthDto userDto) {
+    public ResponseEntity<String> googleLogin(@RequestBody UserGoogleAuthDto googleAuthDto) {
         try {
             // Перевірка, чи існує користувач і чи правильні дані
-            String token = userService.signInGoogle(userDto.getToken());
+            String token = userService.signInGoogle(googleAuthDto.getToken());
             return ResponseEntity.ok("Bearer " + token);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Google login error: " + e.getMessage());

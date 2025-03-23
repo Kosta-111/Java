@@ -13,8 +13,8 @@ export default function Layout() {
 
                 {/* Права частина */}
                 <div>
-                    <Link to="/login" className="hover:underline  mr-4">Вхід</Link>
-                    <Link to="/register" className="hover:underline">Реєстрація</Link>
+                    <Link to="/login" className="hover:underline  mr-4">Login</Link>
+                    <Link to="/register" className="hover:underline">Registration</Link>
                 </div>
             </nav>
 

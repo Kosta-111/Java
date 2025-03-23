@@ -1,6 +1,7 @@
 import {createApi, fetchBaseQuery} from "@reduxjs/toolkit/query/react";
 import {APP_ENV} from "../env";
-import {IUserLoginRequest, IUserRegisterRequest} from "../types/Auth.ts";
+import {IGoogleAuthRequest, ILoginResult, IUserLoginRequest, IUserRegisterRequest} from "../types/Auth.ts";
+import {serialize} from "object-to-formdata";
 
 
 export const authApi = createApi({
@@ -10,22 +11,38 @@ export const authApi = createApi({
     endpoints: (builder) => ({
 
         registerUser: builder.mutation<void, IUserRegisterRequest>({
-            query: (userRegister) => ({
-                url: "auth/register",
-                method: "POST",
-                body: userRegister,
-            }),
+            query: (userRegister) => {
+                try {
+                    const formData = serialize(userRegister);
+                    return {
+                        url: 'auth/register',
+                        method: 'POST',
+                        body: formData
+                    };
+                } catch {
+                    throw new Error("Error serializing the form data.");
+                }
+            },
             //invalidatesTags: ["AuthUser"],
         }),
 
-        loginUser: builder.mutation<string, IUserLoginRequest>({
+        loginUser: builder.mutation<ILoginResult, IUserLoginRequest>({
             query: (userLogin) => ({
                 url: "auth/login",
                 method: "POST",
                 body: userLogin,
             }),
             //invalidatesTags: ["AuthUser"],
-        })
+        }),
+
+        googleAuthUser: builder.mutation<ILoginResult, IGoogleAuthRequest>({
+            query: (googleAuth) => ({
+                url: "auth/google",
+                method: "POST",
+                body: googleAuth,
+            }),
+            //invalidatesTags: ["AuthUser"],
+        }),
 
     }),
 });
@@ -33,5 +50,6 @@ export const authApi = createApi({
 // Автоматично згенерований хук
 export const {
     useRegisterUserMutation,
-    useLoginUserMutation
+    useLoginUserMutation,
+    useGoogleAuthUserMutation
 } = authApi;

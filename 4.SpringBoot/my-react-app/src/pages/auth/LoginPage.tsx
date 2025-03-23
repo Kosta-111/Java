@@ -5,7 +5,7 @@ import { GoogleOutlined } from '@ant-design/icons';
 import {IUserLoginRequest} from "../../types/Auth.ts";
 import GoogleLoginButton from "./GoogleLoginButton.tsx";
 import {useNavigate} from "react-router-dom";
-import {useLoginUserMutation} from "../../services/authApi.ts";
+import {useGoogleAuthUserMutation, useLoginUserMutation} from "../../services/authApi.ts";
 
 const {Item} = Form;
 
@@ -14,28 +14,42 @@ const LoginPage: React.FC = () => {
     const [form] = Form.useForm<IUserLoginRequest>();
     const navigate = useNavigate();
     const [loginUser] = useLoginUserMutation();
+    const [googleAuthUser] = useGoogleAuthUserMutation();
 
     const onFinish = async (values: IUserLoginRequest) => {
-
-        console.log("Login user", values);
         try {
             console.log("Login user", values);
             const response = await loginUser(values).unwrap();
-            console.log("Логін успішний, токен: ", response);
+            const token = response.token;
+            if (token) {
+                console.log("Login success, jwt token: ", token);
+                localStorage.setItem('jwt', token);
+            }
             navigate("..");
         } catch (error) {
-            console.error("Помилка при вході", error);
+            console.error("Login error", error);
         }
     }
 
-    const onLoginGoogleResult = (tokenGoogle: string) => {
-        console.log("google token", tokenGoogle);
+    const onLoginGoogleResult = async (tokenGoogle: string) => {
+        try {
+            console.log("Google token", tokenGoogle);
+            const response = await googleAuthUser({token: tokenGoogle}).unwrap();
+            const token = response.token;
+            if (token) {
+                console.log("Google login success, jwt token: ", token);
+                localStorage.setItem('jwt', token);
+            }
+            navigate("..");
+        } catch (error) {
+            console.error("Login error", error);
+        }
     }
 
     return (
         <>
             <GoogleOAuthProvider clientId={"688315354046-isd3q5qkjaj88uaj9oudrldsf18bm592.apps.googleusercontent.com"}>
-                <h1 className={"text-center text-4xl font-bold text-blue-500"}>Вхід на сайт</h1>
+                <h1 className={"text-center text-4xl font-bold text-blue-500"}>Login page</h1>
 
                 <div style={{maxWidth: '400px', margin: '0 auto'}}>
                     <Form
@@ -45,33 +59,32 @@ const LoginPage: React.FC = () => {
 
                         <Item
                             name="username"
-                            label={"Електронна пошта"}
+                            label={"E-mail"}
                             rules={[
-                                {required: true, message: "Вкажіть свою пошшту"},
-                                {type: "email", message: "Введіть коректний email"}
+                                { required: true, message: "Enter your email" },
+                                { type: "email", message: "Enter correct email" }
                             ]}>
-                            <Input placeholder={"Електронна пошта"}/>
+                            <Input placeholder={"E-mail"}/>
                         </Item>
 
                         <Item
                             name="password"
-                            label="Пароль"
+                            label="Password"
                             rules={[
-                                {required: true, message: "Введіть пароль"},
-                                {min: 6, message: "Пароль має містити щонайменше 6 символів"}
+                                { required: true, message: "Enter password" },
+                                { min: 6, message: "Password must be at least 6 characters" }
                             ]}
                         >
-                            <Input.Password placeholder="Введіть пароль"/>
+                            <Input.Password placeholder="Password"/>
                         </Item>
-
 
                         <Item>
                             <Button type="primary" htmlType="submit">
-                                Вхід
+                                Login
                             </Button>
                         </Item>
 
-                        <GoogleLoginButton icon={<GoogleOutlined />} title='Увійти з Google' onLogin={onLoginGoogleResult} />
+                        <GoogleLoginButton icon={<GoogleOutlined />} title='Login with Google' onLogin={onLoginGoogleResult} />
 
                     </Form>
                 </div>

@@ -3,6 +3,7 @@ import {ReactNode} from "react";
 export interface IUserRegisterRequest {
     username: string;
     password: string;
+    imageFile: File | null;
 }
 
 export interface IUserLoginRequest {
@@ -10,7 +11,16 @@ export interface IUserLoginRequest {
     password: string;
 }
 
-export interface LoginButtonProps{
+export interface IGoogleAuthRequest {
+    token: string;
+}
+
+export interface ILoginResult {
+    token?: string;
+    error?: string;
+}
+
+export interface LoginButtonProps {
     title: string
     onLogin: (token: string) => void
     icon: ReactNode

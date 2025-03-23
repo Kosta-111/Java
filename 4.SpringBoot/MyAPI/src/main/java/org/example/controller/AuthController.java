@@ -32,23 +32,23 @@ public class AuthController {
 
     // Логін користувача та отримання JWT токену
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody UserAuthDto userDto) {
+    public ResponseEntity<?> login(@RequestBody UserAuthDto userDto) {
         try {
             var accessToken = userService.authenticateUser(userDto);
-            return ResponseEntity.ok("Bearer " + accessToken);
+            return ResponseEntity.ok(Map.of("token", "Bearer " + accessToken));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Login error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", "Login error - " + e.getMessage()));
         }
     }
 
     @PostMapping("/google")
-    public ResponseEntity<String> googleLogin(@RequestBody UserGoogleAuthDto googleAuthDto) {
+    public ResponseEntity<?> googleLogin(@RequestBody UserGoogleAuthDto googleAuthDto) {
         try {
             // Перевірка, чи існує користувач і чи правильні дані
             String token = userService.signInGoogle(googleAuthDto.getToken());
-            return ResponseEntity.ok("Bearer " + token);
+            return ResponseEntity.ok(Map.of("token", "Bearer " + token));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Google login error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", "Google login error - " + e.getMessage()));
         }
     }
 }
